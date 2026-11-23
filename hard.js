@@ -96,6 +96,12 @@ LIB.hard=(n,tier)=>{const e=EPISODES[n];if(!e||e._hard)return;e._hard=tier;
  if(has("cal")){L.cal=L.cal||[];const add=shuffle(r,CAL).slice(0,1+tier).map((c,i)=>({id:"xk"+i,g:"Altri impegni",title:c[0],sub:c[1],body:""}));L.cal=L.cal.concat(add);}
  if(has("web")){L.web=L.web||[];const add=shuffle(r,WEB).slice(0,2+tier*2).map((w,i)=>({id:"xw"+i,g:"Cronologia",title:w,sub:day(r)}));L.web=shuffle(r,L.web.concat(add));}
  if(e.photos&&e.scenes){shuffle(r,PHOTOS).slice(0,tier).forEach((p,i)=>{const k="x"+i;e.scenes[k]=()=>LIB.obj(p[0],p[1],p[2]);e.photos.splice(Math.floor(r()*e.photos.length),0,{id:"xp"+i,t:pick(r,DAYS),title:p[2],sc:k});});}
+ // false piste "sospette" ma innocenti (livelli 2-3): segreti che sembrano colpe e non lo sono
+ if(tier>=2&&e.chats){const FL=[
+   {id:"xs1",name:"Michela",sub:"",m:[["sab 22:40",0,"Mi raccomando, non deve saperne niente nessuno"],["sab 22:41",1,"Tranquilla, muta come un pesce"],["",2,"1 messaggio eliminato."],["dom 10:02",0,"Allora venerdì alle 21 da me, entra dal retro così non ti vede"],["dom 10:05",1,"Ok. Cancello tutto"],["ven 23:50",0,"Che serata! La festa a sorpresa per Ste è venuta benissimo 🎉"]]},
+   {id:"xs2",name:"Numero sconosciuto",sub:"",m:[["mer 7:12",0,"Ho le chiavi, passo quando non c'è nessuno"],["mer 7:15",1,"Sì, dopo le 9 la casa è vuota"],["mer 18:30",0,"Fatto. Fattura per la caldaia nella cassetta della posta. Idraulico Ferretti"]]},
+   {id:"xs3",name:"Roby",sub:"",m:[["gio 13:01",0,"Hai ritirato i soldi?"],["gio 13:20",1,"Sì, 500 in contanti come mi hai detto"],["gio 13:21",0,"Perfetto, domani glieli porto io"],["lun 9:00",0,"Il meccanico ha detto che con 500 si chiude tutto, grazie del prestito!"]]}];
+  shuffle(r,FL).slice(0,tier-1).forEach(c=>{const all=e.chats;all.splice(1+Math.floor(r()*all.length),0,c);});}
  if(e.timer)e.timer+=tier*300;
 };
 for(let n=1;n<=80;n++){const k=(n-1)%20+1;if(k>=6&&EPISODES[n])LIB.hard(n,k<=10?1:k<=15?2:3);}
