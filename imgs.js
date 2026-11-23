@@ -1,0 +1,1 @@
+window.THG_IMGS=[];
