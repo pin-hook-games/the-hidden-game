@@ -205,7 +205,8 @@ function listView(app){
     if(e.g&&e.g!==g){g=e.g;h+=`<div class="grp">${g}</div>`;}
     const sub=locked(e)?"Protetto da codice":(e.sub||(e.body?e.body.split("\n")[0]:""));
     const inner=`<b>${e.title}</b><span>${esc(sub)}</span>${e.meta&&!locked(e)?`<small>${e.meta}</small>`:""}`;
-    h+=e.body?`<button type="button" class="row" data-act="open" data-s="${e.id}">${inner}</button>`:`<div class="row still">${inner}</div>`;
+    const ms=app==="map"&&!locked(e)&&typeof MAPX!=="undefined"&&MAPX.match(E,e);const go=ms?`<span class="tlgo" data-act="spot" data-s="${ms.id}" data-mfocus="${ms.id}" role="button" aria-label="Mostra sulla mappa">📍</span>`:"";
+    h+=e.body?`<button type="button" class="row" data-act="open" data-s="${e.id}">${inner}${go}</button>`:`<div class="row still">${inner}${go}</div>`;
   });
   return h+"</div>";
 }
@@ -216,7 +217,8 @@ function mapBox(){
   if(s)card=s.lock&&!S.open[s.lock]?`<div class="spotcard"><b>${esc(s.title)}</b>${pinPad(s.lock)}</div>`:`<div class="spotcard"><b>${esc(s.title)}</b>${s.sub?`<div class="meta">${esc(s.sub)}</div>`:""}<p>${esc(s.body)}</p>${s.sc&&E.scenes[s.sc]?`<div class="shot">${svg(s.sc)}</div>`:""}</div>`;
   else if(sp.length)card=`<p class="maptip">Tocca i punti sulla mappa per vedere che cosa c'è.</p>`;
   const mp=typeof MAPX!=="undefined"?(E._mapx||(E._mapx=MAPX.enrich(E.map,E.n))):E.map;
-  return `<div class="mapbox"><div class="mapzoom" style="${typeof MAPX!=="undefined"?MAPX.state(E.n):""}"><div class="mapwrap">${mp}${pins}</div></div>${typeof MAPX!=="undefined"?MAPX.controls():""}</div>${card}`;
+  const X=typeof MAPX!=="undefined";
+  return `${X?MAPX.search(E):""}<div class="mapbox${X&&MAPX.night()?" night":""}"><div class="mapzoom" style="${X?MAPX.state(E.n):""}"><div class="mapwrap">${mp}${X?MAPX.routeSvg(E):""}${pins}</div></div>${X?MAPX.controls():""}</div>${X?MAPX.dayChips(E):""}${card}`;
 }
 function vnote(t,who){const txt=t.replace(/^\(vocale\)\s*/i,"").replace(/^«|»$/g,"");const sec=Math.max(2,Math.round(txt.length/14));return `<button type="button" class="vplay" data-act="voice" data-who="${esc(who)}" data-t="${esc(txt)}" aria-label="Ascolta il messaggio vocale">▶</button><span class="wave"></span><span class="dur">0:${String(sec).padStart(2,"0")}</span><details class="tr"><summary>Trascrizione</summary>${esc(txt)}</details>`;}
 function detailView(app){

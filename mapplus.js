@@ -24,7 +24,7 @@ function enrich(svg,seed){
  const layer=`<g data-x="1">${trees.join("")}<g ${F} font-size="5.6" font-weight="500" font-style="italic" fill="#8e8e93" stroke-width="1.6">${names.join("")}</g>${pois.join("")}</g>`;
  // sotto le etichette dei quartieri (prima del primo gruppo di testo), sopra le strade
  const i=svg.indexOf("<g font-family");const body=i>0?svg.slice(0,i)+layer+svg.slice(i):svg.replace("</svg>",layer+"</svg>");
- return body.replace("</svg>",compass+scale+"</svg>");
+ return shade(body.replace("</svg>",compass+scale+"</svg>"));
 }
 const ICONS=[[/casa|abitazion|appartament|villa|palazzo/i,"🏠"],[/bar|caff|pasticc/i,"☕"],[/ristorante|trattoria|osteria|pizzeria|pranzo|cena/i,"🍴"],[/ospedal|clinica|ambulator|pronto soccorso/i,"🏥"],[/chiesa|parrocchia|duomo|basilica/i,"⛪"],[/hotel|albergo|b&b|camera/i,"🛏️"],[/porto|banchina|molo|darsena|varco/i,"⚓"],[/stazione|treno|binario/i,"🚉"],[/aeroporto/i,"✈️"],[/ufficio|studio|agenzia|redazione|comune|municipio/i,"💼"],[/palestra|piscina|campo|stadio/i,"🏋️"],[/negozio|boutique|gioiell|mercato|supermercato/i,"🛍️"],[/parcheggio|garage|box/i,"🅿️"],[/scuola|universit|liceo|conservatorio/i,"🏫"],[/banca|caveau/i,"🏦"],[/farmacia/i,"💊"],[/spiaggia|lido|bagno|mare/i,"🏖️"],[/cantiere|discarica|cava/i,"🏗️"],[/locale|discoteca|club/i,"🎧"],[/parco|giardin|orto|bosco/i,"🌳"],[/rifugio|monte|cresta/i,"🏔️"],[/cantina|vigna/i,"🍇"],[/galleria|museo/i,"🖼️"]];
 function icon(s){if(s.icon)return s.icon;const t=[s.title,s.label,s.sub].join(" ");for(const [re,ic] of ICONS)if(re.test(t))return ic;return "📍";}
@@ -46,4 +46,33 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 window.MAPX={enrich,icon,
  state(ep){if(V.ep!==ep){V.z=1;V.x=0;V.y=0;V.ep=ep;}return `transform:translate(${V.x}px,${V.y}px) scale(${V.z});--iz:${(1/V.z).toFixed(3)}`;},
  controls:()=>`<div class="mapctl"><button type="button" data-mz="+" aria-label="Ingrandisci">+</button><button type="button" data-mz="-" aria-label="Riduci">−</button><button type="button" data-mz="0" aria-label="Vista intera">⤢</button></div>`};
+
+/* ---- secondo giro: percorso, ultima posizione, ricerca, notte, rilievo ---- */
+const words=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").split(/[^a-z0-9]+/).filter(w=>w.length>3&&!/^(casa|della|delle|dello|degli|dalle|alle|sopra|sotto|verso|fino|dopo|prima|ogni|anche|sono|nella|sulla|via)$/.test(w));
+function spotsOf(E){return (E.spots||[]).filter(s=>!s.u||(typeof S!=="undefined"&&S.unl&&S.unl[s.u]));}
+function match(E,item){const iw=words(String(item.title).split(/,| · | - /)[0]);let best=null,bs=0;
+ for(const s of spotsOf(E)){const sw=words([s.title,s.label].join(" "));const sc=iw.filter(w=>sw.includes(w)).length;if(sc>bs){bs=sc;best=s;}}
+ return best;}
+function days(E){const L=(E.lists&&E.lists.map)||[];const g=[];L.forEach(it=>{if(it.lock&&!(typeof S!=="undefined"&&S.open[it.lock]))return;const k=it.g||"Spostamenti";let d=g.find(x=>x.k===k);if(!d)g.push(d={k,it:[]});d.it.push(it);});
+ return g.map(d=>({k:d.k,stops:d.it.map(it=>({it,s:match(E,it)})).filter(x=>x.s)})).filter(d=>d.stops.length);}
+V.day=0;
+function routeSvg(E){const ds=days(E);if(!ds.length)return "";const d=ds[Math.min(V.day,ds.length-1)];const st=d.stops;
+ const pts=st.map(x=>[x.s.x,x.s.y]);const seq=[];pts.forEach(p=>{const l=seq[seq.length-1];if(!l||l[0]!==p[0]||l[1]!==p[1])seq.push(p);});
+ let path="";if(seq.length>1)path=`<path d="M${seq.map(p=>p.join(" ")).join("L")}" fill="none" stroke="#0a84ff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 6" opacity=".9"/><path d="M${seq.map(p=>p.join(" ")).join("L")}" fill="none" stroke="#0a84ff" stroke-width="1.4" opacity=".35"/>`;
+ const nums=st.map((x,i)=>`<g transform="translate(${x.s.x-11} ${x.s.y-13})"><circle r="5.5" fill="#0a84ff" stroke="#fff" stroke-width="1.4"/><text y="2.1" font-size="6.2" font-weight="700" fill="#fff" text-anchor="middle" font-family="-apple-system,Arial,sans-serif">${i+1}</text></g>`).join("");
+ const last=st[st.length-1].s;const dot=`<g transform="translate(${last.x} ${last.y+14})"><circle r="9" fill="#0a84ff" opacity=".18"><animate attributeName="r" values="5;11;5" dur="2s" repeatCount="indefinite"/></circle><circle r="4" fill="#0a84ff" stroke="#fff" stroke-width="1.6"/></g>`;
+ return `<svg class="route" viewBox="0 0 400 260" preserveAspectRatio="none">${path}${nums}${dot}</svg>`;}
+function dayChips(E){const ds=days(E);if(!ds.length)return "";const i=Math.min(V.day,ds.length-1);
+ return `<div class="mapdays"><span>Percorso:</span>${ds.map((d,k)=>`<button type="button" class="${k===i?"on":""}" data-mday="${k}">${d.k} · ${d.stops.length} ${d.stops.length===1?"tappa":"tappe"}</button>`).join("")}</div><div class="maplast">● Ultima posizione nota: <b>${ds[i].stops[ds[i].stops.length-1].s.title}</b></div>`;}
+function search(E){const sp=spotsOf(E);if(sp.length<2)return "";return `<div class="mapsearch"><input type="search" placeholder="Cerca un luogo sulla mappa" aria-label="Cerca un luogo" data-msearch><div class="msres"></div></div>`;}
+function focus(sid){const E0=typeof E!=="undefined"?E:null;if(!E0)return;const s=(E0.spots||[]).find(x=>x.id===sid);const box=document.querySelector(".mapbox");if(!s||!box)return;const w=box.clientWidth,h=box.clientHeight;V.z=2.2;V.x=w/2-(s.x/400*w)*V.z;V.y=h/2-(s.y/260*h)*V.z;clamp();apply();}
+document.addEventListener("input",e=>{const inp=e.target.closest&&e.target.closest("[data-msearch]");if(!inp||typeof E==="undefined")return;const q=words(inp.value).join(" ")||inp.value.toLowerCase().trim();const res=inp.parentNode.querySelector(".msres");
+ if(!q){res.innerHTML="";return;}const hit=spotsOf(E).filter(s=>[s.title,s.label,s.sub,s.body].join(" ").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(inp.value.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim())).slice(0,5);
+ res.innerHTML=hit.length?hit.map(s=>`<button type="button" data-act="spot" data-s="${s.id}" data-mfocus="${s.id}">${icon(s)} ${s.title}</button>`).join(""):`<div class="none">Nessun luogo trovato</div>`;});
+document.addEventListener("click",e=>{const f=e.target.closest&&e.target.closest("[data-mfocus]");if(f){const id=f.dataset.mfocus;setTimeout(()=>focus(id),60);}
+ const d=e.target.closest&&e.target.closest("[data-mday]");if(d){e.stopPropagation();V.day=+d.dataset.mday;if(typeof render==="function")render(true);}
+ const n=e.target.closest&&e.target.closest("[data-mnight]");if(n){e.stopPropagation();V.night=!V.night;const b=document.querySelector(".mapbox");if(b)b.classList.toggle("night",V.night);}},true);
+function shade(svg){return svg.replace(/<g fill="#ebe6dd">([\s\S]*?)<\/g>/,(m,inner)=>`<g fill="#d9d2c6" transform="translate(1.3 1.6)">${inner}</g><g fill="#ebe6dd">${inner}</g>`);}
+Object.assign(window.MAPX,{match,routeSvg,dayChips,search,focus,shade,night:()=>!!V.night,
+ controls:()=>`<div class="mapctl"><button type="button" data-mz="+" aria-label="Ingrandisci">+</button><button type="button" data-mz="-" aria-label="Riduci">−</button><button type="button" data-mz="0" aria-label="Vista intera">⤢</button><button type="button" data-mnight="1" aria-label="Modalità notte">🌙</button></div>`});
 })();
