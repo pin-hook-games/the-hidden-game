@@ -300,6 +300,15 @@ button.row::after{content:"›";position:absolute;right:14px;top:50%;transform:t
 .bub .tr{flex-basis:100%;font-size:13px;opacity:.85}.bub .tr summary{cursor:pointer;font-size:12px;opacity:.7}
 #ringText p.speaking{color:#fff;font-weight:600;text-shadow:0 0 12px rgba(255,255,255,.35)}
 .ep.tutbtn{border:1.5px dashed rgba(255,255,255,.45);background:rgba(255,255,255,.06)}
+.mapbox{position:relative;overflow:hidden;touch-action:none}
+.mapzoom{transform-origin:0 0;will-change:transform}
+.mapzoom .spot{transform:translate(-50%,-50%) scale(var(--iz,1))}
+.spot i{font-size:12px}
+.mapctl{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:4px;z-index:3}
+.mapctl button{width:26px;height:26px;border-radius:7px;border:0;background:rgba(255,255,255,.95);box-shadow:0 1px 4px rgba(0,0,0,.25);font-size:15px;font-weight:600;color:#1d1d1f;cursor:pointer}
+.list.timeline .row{position:relative;padding-left:34px}
+.list.timeline .row::before{content:"";position:absolute;left:16px;top:0;bottom:0;width:2px;background:#c7d7f0}
+.list.timeline .row::after{content:"";position:absolute;left:11px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:#fff;border:2.5px solid #0a84ff;box-sizing:border-box}
 </style>
 </head>
 <body data-screen="menu" data-tab="phone">
@@ -441,6 +450,7 @@ button.row::after{content:"›";position:absolute;right:14px;top:50%;transform:t
 <script src="hard.js"></script>
 <script src="events.js"></script>
 <script src="voice.js"></script>
+<script src="mapplus.js"></script>
 <script src="engine.js"></script>
 <div id="upd" style="display:none;position:fixed;left:12px;right:12px;bottom:16px;z-index:9999;background:#f2be3c;color:#0f1a2b;border-radius:14px;padding:14px 16px;font:600 15px/1.3 system-ui,sans-serif;box-shadow:0 8px 30px #0008;text-align:center;cursor:pointer">Nuova versione disponibile · tocca per aggiornare</div>
 <script>

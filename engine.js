@@ -200,7 +200,7 @@ function renderMenu(){
 
 /* ---------------- viste del telefono ---------------- */
 function listView(app){
-  let h=bar(E.names[app])+(app==="map"&&E.map?mapBox():"")+`<div class="list">`,g=null;
+  let h=bar(E.names[app])+(app==="map"&&E.map?mapBox():"")+`<div class="list${app==="map"?" timeline":""}">`,g=null;
   E.lists[app].filter(e=>!e.u||S.unl[e.u]).forEach(e=>{
     if(e.g&&e.g!==g){g=e.g;h+=`<div class="grp">${g}</div>`;}
     const sub=locked(e)?"Protetto da codice":(e.sub||(e.body?e.body.split("\n")[0]:""));
@@ -211,11 +211,12 @@ function listView(app){
 }
 function mapBox(){
   const sp=(E.spots||[]).filter(s=>!s.u||S.unl[s.u]);
-  const pins=sp.map(s=>`<button type="button" class="spot${S.spot===s.id?" on":""}${s.lock&&!S.open[s.lock]?" lk":""}" style="left:${(s.x/4).toFixed(2)}%;top:${(s.y/2.6).toFixed(2)}%" data-act="spot" data-s="${s.id}" aria-label="${esc(s.title)}"><i>${s.lock&&!S.open[s.lock]?"🔒":(s.icon||"i")}</i><em>${esc(s.label||s.title)}</em></button>`).join("");
+  const pins=sp.map(s=>`<button type="button" class="spot${S.spot===s.id?" on":""}${s.lock&&!S.open[s.lock]?" lk":""}" style="left:${(s.x/4).toFixed(2)}%;top:${(s.y/2.6).toFixed(2)}%" data-act="spot" data-s="${s.id}" aria-label="${esc(s.title)}"><i>${s.lock&&!S.open[s.lock]?"🔒":(typeof MAPX!=="undefined"?MAPX.icon(s):(s.icon||"i"))}</i><em>${esc(s.label||s.title)}</em></button>`).join("");
   let card="";const s=sp.find(x=>x.id===S.spot);
   if(s)card=s.lock&&!S.open[s.lock]?`<div class="spotcard"><b>${esc(s.title)}</b>${pinPad(s.lock)}</div>`:`<div class="spotcard"><b>${esc(s.title)}</b>${s.sub?`<div class="meta">${esc(s.sub)}</div>`:""}<p>${esc(s.body)}</p>${s.sc&&E.scenes[s.sc]?`<div class="shot">${svg(s.sc)}</div>`:""}</div>`;
   else if(sp.length)card=`<p class="maptip">Tocca i punti sulla mappa per vedere che cosa c'è.</p>`;
-  return `<div class="mapbox"><div class="mapwrap">${E.map}${pins}</div></div>${card}`;
+  const mp=typeof MAPX!=="undefined"?(E._mapx||(E._mapx=MAPX.enrich(E.map,E.n))):E.map;
+  return `<div class="mapbox"><div class="mapzoom" style="${typeof MAPX!=="undefined"?MAPX.state(E.n):""}"><div class="mapwrap">${mp}${pins}</div></div>${typeof MAPX!=="undefined"?MAPX.controls():""}</div>${card}`;
 }
 function vnote(t,who){const txt=t.replace(/^\(vocale\)\s*/i,"").replace(/^«|»$/g,"");const sec=Math.max(2,Math.round(txt.length/14));return `<button type="button" class="vplay" data-act="voice" data-who="${esc(who)}" data-t="${esc(txt)}" aria-label="Ascolta il messaggio vocale">▶</button><span class="wave"></span><span class="dur">0:${String(sec).padStart(2,"0")}</span><details class="tr"><summary>Trascrizione</summary>${esc(txt)}</details>`;}
 function detailView(app){
