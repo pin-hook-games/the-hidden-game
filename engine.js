@@ -233,7 +233,7 @@ function render(keepScroll){
   if(S.view==="home"){
     h=`<div class="home"><div><div class="clock">${phoneTime()}</div><div class="date">${E.homeDate}</div></div>
     <div class="owner">Telefono di ${E.owner.split(" ")[0]}</div>
-    <div class="apps">${E.apps.map(a=>`<button type="button" class="app" data-act="go" data-v="${a[0]}"><i style="background:${a[3]}">${icon(a[2])}</i>${a[1]}</button>`).join("")}</div></div>`;
+    ${typeof HOMEP!=="undefined"?HOMEP.render(E,icon):`<div class="apps">${E.apps.map(a=>`<button type="button" class="app" data-act="go" data-v="${a[0]}"><i style="background:${a[3]}">${icon(a[2])}</i>${a[1]}</button>`).join("")}</div>`}</div>`;
   }
   else if(S.view==="msg"&&!S.sub){
     h=bar("Messaggi")+`<div class="list">${E.chats.filter(c=>!c.u||S.unl[c.u]).map(c=>{const vis=c.m.filter(m=>!m[3]||S.unl[m[3]]),l=vis[vis.length-1]||c.m[0];return `<button type="button" class="row" data-act="open" data-s="${c.id}"><b>${c.name}</b><span>${c.lock&&!S.open[c.lock]?"Chat protetta da codice":esc(l[2])}</span><small>${l[0]}${c.sub?" · "+c.sub:""}</small></button>`}).join("")}</div>`;
