@@ -25,7 +25,7 @@ function bankList(app){
  const bal=(1200+hash(E.owner+"b")%3600)+","+String(hash(E.owner)%100).padStart(2,"0");
  const rows=groups(L,e=>{if(isLocked(e))return row(e,`<span class="bi">🔒</span><span class="bt"><b>Movimento protetto</b><small>Tocca per sbloccare</small></span>`,"bk-row");
   const m=money(e);return row(e,`<span class="bi">${bicon(e)}</span><span class="bt"><b>${h(e.title)}</b><small>${h(dateOf(e)||e.meta||"")}</small></span>${m?`<span class="ba ${m.sign==="+"?"in":"out"}">${m.sign} ${m.v} €</span>`:`<span class="ba">${h(e.sub||"")}</span>`}`,"bk-row");});
- return bar(E.names[app],app)+`<div class="bk"><div class="bk-card"><small>Conto corrente</small>${clue?"<b>Saldo nascosto</b>":`<b>${bal.replace(/\B(?=(\d{3})+(?!\d))/g,".")} €</b>`}<span>IT•• •••• •••• ${last4} · ${h(E.owner.split(" · ")[0])}</span></div><div class="bk-acts"><span>↗<i>Invia</i></span><span>↙<i>Ricevi</i></span><span>💳<i>Carte</i></span><span>📊<i>Spese</i></span></div><div class="bk-h">Movimenti</div><div class="bk-list">${rows}</div></div>`;
+ return bar(E.names[app])+`<div class="bk"><div class="bk-card"><small>Conto corrente</small>${clue?"<b>Saldo nascosto</b>":`<b>${bal.replace(/\B(?=(\d{3})+(?!\d))/g,".")} €</b>`}<span>IT•• •••• •••• ${last4} · ${h(E.owner.split(" · ")[0])}</span></div><div class="bk-acts"><span>↗<i>Invia</i></span><span>↙<i>Ricevi</i></span><span>💳<i>Carte</i></span><span>📊<i>Spese</i></span></div><div class="bk-h">Movimenti</div><div class="bk-list">${rows}</div></div>`;
 }
 function bankDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app,e);const m=money(e),last4=String(1000+hash(E.owner)%9000);
  return bar(E.names[app],app)+`<div class="bk-det"><span class="bi big">${bicon(e)}</span><div class="bd-amt ${m&&m.sign==="+"?"in":""}">${m?m.sign+" "+m.v+" €":h(e.sub||"")}</div><div class="bd-t">${h(e.title)}</div><div class="bd-grid"><span>Data</span><b>${h(dateOf(e)||e.g||"—")}</b><span>Stato</span><b>Contabilizzato</b><span>Metodo</span><b>${m&&m.sign==="+"?"Bonifico":"Carta ••"+last4}</b>${e.meta?`<span>Info</span><b>${h(e.meta)}</b>`:""}</div>${e.body?`<div class="bd-note">${br(e.body)}</div>`:""}</div>`;}
@@ -34,7 +34,7 @@ function bankDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(ap
 function mailList(app){const L=vis(app);
  const rows=L.map((e,i)=>{const lk=isLocked(e);const prev=lk?"🔒 Messaggio protetto da codice":String(e.body||"").replace(/\n/g," ").slice(0,90);
   return row(e,`${av(e.title)}<span class="mt"><span class="m1"><b>${h(e.title)}</b><small>${h(e.meta||"")}</small></span><span class="m2">${h(e.sub||"(nessun oggetto)")}</span><span class="m3">${h(prev)}</span></span>${i<2&&!S.open["r_"+e.id]?`<i class="dot"></i>`:""}`,"ml-row");}).join("");
- return bar(E.names[app],app)+`<div class="ml"><div class="ml-h">Posta in arrivo</div><div class="ml-s">🔍 Cerca</div>${rows||`<p class="empty">Nessun messaggio</p>`}</div>`;}
+ return bar(E.names[app])+`<div class="ml"><div class="ml-h">Posta in arrivo</div><div class="ml-s">🔍 Cerca</div>${rows||`<p class="empty">Nessun messaggio</p>`}</div>`;}
 function mailDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app,e);S.open["r_"+e.id]=true;
  return bar(E.names[app],app)+`<div class="ml-det"><h3>${h(e.sub||e.title)}</h3><div class="md-from">${av(e.title,38)}<span><b>${h(e.title)}</b><small>a me · ${h(e.meta||"")}</small></span></div><div class="md-body">${br(e.body)}</div><div class="md-acts"><span>↩ Rispondi</span><span>↪ Inoltra</span></div></div>`;}
 
@@ -44,7 +44,7 @@ const slug=t=>String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").re
 function url(e){if(/\.[a-z]{2,4}\b/i.test(e.title))return e.title.toLowerCase();return isQuery(e.title)?"cerca?q="+e.title.trim().replace(/\s+/g,"+"):"www."+slug(e.title)+".it";}
 function webList(app){const L=vis(app);
  const rows=groups(L,e=>row(e,`<span class="fav">${isQuery(e.title)?"🔍":h((e.title.replace(/^[^\p{L}]+/u,"")[0]||"•").toUpperCase())}</span><span class="wt"><b>${h(e.title)}</b><small>${h(url(e))}</small></span><span class="wtime">${h(e.sub||"")}</span>`,"wb-row"));
- return bar(E.names[app],app)+`<div class="wb"><div class="wb-bar"><span>🔒</span><span class="wb-u">Cerca o inserisci un indirizzo</span><span class="wb-tabs">${Math.max(2,L.length)}</span></div><div class="wb-h">Cronologia</div>${rows||`<p class="empty">Cronologia vuota</p>`}</div>`;}
+ return bar(E.names[app])+`<div class="wb"><div class="wb-bar"><span>🔒</span><span class="wb-u">Cerca o inserisci un indirizzo</span><span class="wb-tabs">${Math.max(2,L.length)}</span></div><div class="wb-h">Cronologia</div>${rows||`<p class="empty">Cronologia vuota</p>`}</div>`;}
 function webDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app,e);
  return bar(E.names[app],app)+`<div class="wb"><div class="wb-bar"><span>🔒</span><span class="wb-u on">${h(url(e))}</span><span class="wb-tabs">↻</span></div><div class="wb-page"><h3>${h(e.title)}</h3>${e.meta?`<small>${h(e.meta)}</small>`:""}<div>${br(e.body)}</div></div></div>`;}
 
@@ -53,14 +53,14 @@ function telKind(e){const t=(e.sub||"")+" "+(e.title||"");return /persa|non risp
 function telList(app){const L=vis(app);
  const rows=L.map(e=>{const k=telKind(e);const parts=String(e.sub||"").split("·").map(x=>x.trim());
   return row(e,`<span class="tk">${k==="out"?"↗":k==="miss"?"↙":k==="vm"?"⏺":"↙"}</span><span class="tt"><b class="${k==="miss"?"miss":""}">${h(e.title)}</b><small>${h(parts.slice(1).join(" · ")||(k==="out"?"In uscita":k==="miss"?"Persa":"Cellulare"))}</small></span><span class="ttime">${h(parts[0]||"")}</span><span class="ti">ⓘ</span>`,"tl-row");}).join("");
- return bar(E.names[app],app)+`<div class="tl"><div class="tl-seg"><span class="on">Tutte</span><span>Perse</span></div><div class="tl-h">Recenti</div>${rows||`<p class="empty">Nessuna chiamata</p>`}</div>`;}
+ return bar(E.names[app])+`<div class="tl"><div class="tl-seg"><span class="on">Tutte</span><span>Perse</span></div><div class="tl-h">Recenti</div>${rows||`<p class="empty">Nessuna chiamata</p>`}</div>`;}
 function telDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app,e);const audible=/«|segreteria/i.test(e.title+" "+e.body);
  return bar(E.names[app],app)+`<div class="tl-det">${av(e.title,72)}<h3>${h(e.title)}</h3><div class="td-acts"><span>💬<i>messaggio</i></span><span>📞<i>chiama</i></span><span>✉️<i>mail</i></span></div><div class="td-card"><small>${h(e.sub||"")}</small>${e.meta?`<small>${h(e.meta)}</small>`:""}${audible?`<button type="button" class="vplay big" data-act="voice" data-who="${h(e.title)}" data-t="${h(e.body)}">▶ Ascolta</button>`:""}<p>${br(e.body)}</p></div></div>`;}
 
 /* ---------- CALENDARIO ---------- */
 function calList(app){const L=vis(app);
  const rows=groups(L,e=>row(e,`<span class="ct">${h((String(e.sub||"").match(/\d{1,2}[:.]\d{2}/)||[""])[0])}</span><span class="cb" style="border-color:${COL[hash(e.title)%COL.length]}"><b>${isLocked(e)?"🔒 Evento privato":h(e.title)}</b><small>${h(e.sub||"")}</small></span>`,"cl-row"));
- return bar(E.names[app],app)+`<div class="cl"><div class="cl-h">${h(E.homeDate||E.date||"")}</div>${rows||`<p class="empty">Nessun evento</p>`}</div>`;}
+ return bar(E.names[app])+`<div class="cl"><div class="cl-h">${h(E.homeDate||E.date||"")}</div>${rows||`<p class="empty">Nessun evento</p>`}</div>`;}
 function calDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app,e);
  return bar(E.names[app],app)+`<div class="cl-det"><span class="cbar" style="background:${COL[hash(e.title)%COL.length]}"></span><h3>${h(e.title)}</h3><p class="cwhen">${h(e.g||"")} ${h(e.sub||"")}</p>${e.body?`<div class="cnote"><small>Note</small><div>${br(e.body)}</div></div>`:""}</div>`;}
 
@@ -68,7 +68,7 @@ function calDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app
 function noteList(app){const L=vis(app);
  const rows=L.map(e=>{const lk=isLocked(e);const first=lk?"Nota bloccata":String(e.body||"").split("\n").find(x=>x.trim())||"";
   return row(e,`<b>${lk?"🔒 ":""}${h(e.title)}</b><span><i>${h(e.meta||"")}</i>${h(first.slice(0,70))}</span>`,"nt-row");}).join("");
- return bar(E.names[app],app)+`<div class="nt"><div class="nt-h">Note</div><div class="nt-c">${L.length} note</div><div class="nt-list">${rows||`<p class="empty">Nessuna nota</p>`}</div></div>`;}
+ return bar(E.names[app])+`<div class="nt"><div class="nt-h">Note</div><div class="nt-c">${L.length} note</div><div class="nt-list">${rows||`<p class="empty">Nessuna nota</p>`}</div></div>`;}
 function noteDetail(app){const e=find(app);if(isLocked(e))return lockedDetail(app,e);
  return bar(E.names[app],app)+`<div class="nt-det"><small>${h(e.meta||E.date||"")}</small><h3>${h(e.title)}</h3><div>${br(e.body)}</div></div>`;}
 
