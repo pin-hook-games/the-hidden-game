@@ -60,7 +60,7 @@ async function cloudInit(){
     if(onMenu())renderMenu();
   }catch(e){cloudState="off";if(onMenu())renderMenu();}
 }
-const KEEP=["ep","qi","hints","wrong","tip","news","unl","open","left","view","sub","tab","ev"];
+const KEEP=["el","ep","qi","hints","wrong","tip","news","unl","open","left","view","sub","tab","ev"];
 function persist(localOnly){
   if(!E||!S.ep||S.done){return;}
   const c={};KEEP.forEach(k=>c[k]=S[k]);c.at=Date.now();SAVE.cur=c;store();
@@ -148,7 +148,7 @@ function smsShow(ev){
 }
 function loadEpisode(n){
   E=EPISODES[n];injectEvents(n);
-  $("stTime").textContent=E.time;$("stDate").textContent=E.date;
+  $("stTime").textContent=phoneTime()||E.time;$("stDate").textContent=E.date;
   $("fStamp").textContent=`${catOf(E.n).name} · incarico n. ${nn(E.n)} · ${SEASON[E.n-1][2]} · telefono di ${E.owner.split(" ")[0]}`;
   $("fTitle").textContent=SEASON[E.n-1][0];$("fBrief").textContent=E.brief;$("fQuote").textContent=E.quote;
   $("fTime").textContent=E.timer?`Hai ${Math.round(E.timer/60)} minuti prima di doverlo restituire. Il tempo parte appena tocchi il telefono. Ogni risposta sbagliata toglie 45 secondi, ogni suggerimento un minuto.`:"";
@@ -231,7 +231,7 @@ function render(keepScroll){
   if(!E)return;
   const v=$("view"),y=v.scrollTop;let h="";
   if(S.view==="home"){
-    h=`<div class="home"><div><div class="clock">${E.time}</div><div class="date">${E.homeDate}</div></div>
+    h=`<div class="home"><div><div class="clock">${phoneTime()}</div><div class="date">${E.homeDate}</div></div>
     <div class="owner">Telefono di ${E.owner.split(" ")[0]}</div>
     <div class="apps">${E.apps.map(a=>`<button type="button" class="app" data-act="go" data-v="${a[0]}"><i style="background:${a[3]}">${icon(a[2])}</i>${a[1]}</button>`).join("")}</div></div>`;
   }
@@ -255,7 +255,7 @@ function render(keepScroll){
     const p=E.photos.find(x=>x.id===S.sub);
     h=bar(p.title,"gal")+`<div class="pad"><div class="shot">${svg(p.sc)}<em>${p.t}</em></div><div class="meta">${p.t}</div></div>`;
   }
-  else if(E.lists[S.view]) h=S.sub?detailView(S.view):listView(S.view);
+  else if(E.lists[S.view]){const AV=typeof APPV!=="undefined"&&APPV[S.view];h=S.sub?(AV&&AV.detail?AV.detail(S.view):detailView(S.view)):(AV&&AV.list?AV.list(S.view):listView(S.view));}
   v.dataset.app=S.view;v.parentNode.dataset.home=S.view==="home"?"1":"0";
   v.innerHTML=h;v.scrollTop=keepScroll?y:0;
 }
@@ -343,7 +343,9 @@ function timeUp(){
   <div class="acts"><button type="button" class="btn solid" data-act="retry">Riprova da capo</button><button type="button" class="btn" data-act="doneMenu">Torna agli incarichi</button></div>`;
   $("verdict").classList.add("on");
 }
+function phoneTime(){if(!E||!E.time)return "";const [h,m]=E.time.split(":").map(Number);const el=E.timer?(E.timer-(S.left||0)):(S.el||0);const t=((h*60+m+Math.floor(Math.max(0,el)/60))%1440+1440)%1440;return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");}
 function tick(){
+  if(E&&S.ep&&!S.done){if(!E.timer)S.el=(S.el||0)+1;const pt=phoneTime();const st=$("stTime");if(st&&st.textContent!==pt){st.textContent=pt;const ck=document.querySelector(".home .clock");if(ck)ck.textContent=pt;}}
   if(!E||!E.timer||!S.running)return;
   if(S.left>0)S.left--;
   if(S.left===120)toast("Mancano due minuti alla riconsegna.");
