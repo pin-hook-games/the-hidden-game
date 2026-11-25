@@ -11,7 +11,8 @@ const svg=sc=>`<svg viewBox="0 0 400 300" role="img" aria-hidden="true">${E.scen
    e l'indagine lasciata a metà (cur). Se la memoria non è disponibile il gioco funziona lo stesso
    e il menu lo dice; il codice progressi permette di riportare gli incarichi chiusi su un altro dispositivo. */
 const SAVE_KEY="ton-save-v1",MAXN=CATS.length*20;
-const catOf=n=>CATS[Math.floor((n-1)/20)],numIn=n=>((n-1)%20)+1,nn=n=>String(numIn(n)).padStart(2,"0");
+const TUT={id:"tut",from:81,name:"Tutorial",brand:["Come si","gioca"],desc:"Un caso di prova, guidato, per imparare in due minuti."};
+const catOf=n=>n>80?TUT:CATS[Math.floor((n-1)/20)],numIn=n=>((n-1)%20)+1,nn=n=>String(numIn(n)).padStart(2,"0");
 let MENU_CAT=null;
 let SAVE={done:{},cur:null},canStore=true;
 (function(){
@@ -128,12 +129,12 @@ function ringStart(ev){
   ringOnce();clearInterval(ringLoop);ringLoop=setInterval(ringOnce,2200);
   clearTimeout(ringTimer);ringTimer=setTimeout(()=>ringEnd(true),22000);
 }
-function ringQuiet(){clearInterval(ringLoop);clearTimeout(ringTimer);buzz(0);}
+function ringQuiet(){clearInterval(ringLoop);clearTimeout(ringTimer);buzz(0);if(typeof VOICE!=="undefined")VOICE.stop();}
 function ringPick(){
   if(!RING)return;ringQuiet();$("ring").className="ring";
   $("ringSub").textContent="In chiamata · ascolti senza parlare";
   $("ringText").innerHTML=RING.lines.map(l=>`<p>${esc(l)}</p>`).join("");
-  $("ringBtns").innerHTML=`<button type="button" class="rb no" data-act="hangup">Chiudi</button>`;
+  $("ringBtns").innerHTML=`<button type="button" class="rb no" data-act="hangup">Chiudi</button>`;if(typeof VOICE!=="undefined")VOICE.call(RING.from,RING.lines,$("ringText"));
 }
 function ringEnd(missed){
   if(!RING)return;ringQuiet();$("ring").hidden=true;RING=null;render(true);
@@ -171,7 +172,7 @@ function renderMenu(){
     $("brand").innerHTML=`The Hidden <span>Game</span>`;
     $("lead").textContent="Sei un investigatore privato. Ti affidano un telefono e una domanda: fruga tra chat, foto, pagamenti e posizioni, e rispondi all'indagine una domanda dopo l'altra. Scegli il tipo di caso.";
     $("catStamp").textContent="Tipi di caso";
-    $("eps").innerHTML=CATS.map((c,i)=>{
+    $("eps").innerHTML=(EPISODES[81]?`<button type="button" class="ep open tutbtn" data-act="play" data-n="81"><span class="n">?</span><span><b>Come si gioca</b><small>Caso di prova guidato · 2 minuti${isDone(81)?" · completato":""}</small></span><span class="st">${isDone(81)?"Rigioca":"Inizia"}</span></button>`:"")+CATS.map((c,i)=>{
       const ns=epsIn(c),ready=ns.filter(n=>EPISODES[n]).length,done=ns.filter(n=>isDone(n)).length,cu=SAVE.cur&&ns.includes(SAVE.cur.ep)&&curOf(SAVE.cur.ep);
       return `<button type="button" class="ep cat${ready?" open":""}" data-act="cat" data-c="${c.id}" ${ready?"":"disabled"}><span class="cover">${(typeof CAT_IMG!=="undefined"&&CAT_IMG[c.id])?`<img src="${CAT_IMG[c.id]}" alt="">`:(typeof CAT_ART!=="undefined"?CAT_ART[c.id]||"":"")}</span><span class="n">${String(i+1).padStart(2,"0")}</span><span><b>${c.name}</b><small>${c.desc}</small><small class="cprog">${ready?`${done} di ${ready} casi chiusi${ready<20?" · altri in arrivo":""}`:"In preparazione"}</small></span><span class="st">${cu?"Riprendi":ready?"Apri":"In arrivo"}</span></button>`;
     }).join("");
@@ -190,7 +191,7 @@ function renderMenu(){
   const box=$("saves");if(box)box.innerHTML=`<div class="stamp">Salvataggi</div>
     <p>${cloudState==="on"?"I progressi si salvano da soli sul tuo account Claude, a ogni risposta: li ritrovi su qualsiasi dispositivo in cui apri questa pagina con lo stesso account.":cloudState==="loading"?"Sto cercando i tuoi salvataggi...":canStore?"I progressi si salvano da soli su questo dispositivo, a ogni risposta. Il salvataggio sull'account non è attivo in questa pagina: se la memoria del telefono si svuota, usa il codice qui sotto.":"Su questo dispositivo non è possibile salvare: i progressi durano finché la pagina resta aperta. Annota il codice qui sotto."}</p>
     <p class="meta">Account: ${{on:"attivo",loading:"in caricamento",ro:"sola lettura, non posso scrivere",off:"non disponibile"}[cloudState]} · Dispositivo: ${canStore?"attivo":"non disponibile"}</p>
-    <p class="meta">Incarichi chiusi: ${tot} su ${Object.keys(EPISODES).length} · Stelle: ${stars} su ${Object.keys(EPISODES).length*3}</p>
+    <p class="meta">Incarichi chiusi: ${tot} su ${Object.keys(EPISODES).filter(k=>k<=80).length} · Stelle: ${stars} su ${Object.keys(EPISODES).filter(k=>k<=80).length*3}</p>
     ${tot?`<p>Codice progressi: <b class="code">${makeCode()}</b><br><small>Scrivilo su un altro dispositivo per ritrovare gli incarichi chiusi e le stelle.</small></p>`:""}
     <p><button type="button" class="link mutebtn" data-act="mute">${SAVE.mute?"Suoni e vibrazione: spenti. Tocca per accenderli":"Suoni e vibrazione delle chiamate: accesi. Tocca per spegnerli"}</button></p>
     <div class="coderow"><input id="codeIn" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Hai un codice? Scrivilo qui" aria-label="Codice progressi"><button type="button" class="btn" data-act="useCode">Usa</button></div>
@@ -216,10 +217,12 @@ function mapBox(){
   else if(sp.length)card=`<p class="maptip">Tocca i punti sulla mappa per vedere che cosa c'è.</p>`;
   return `<div class="mapbox"><div class="mapwrap">${E.map}${pins}</div></div>${card}`;
 }
+function vnote(t,who){const txt=t.replace(/^\(vocale\)\s*/i,"").replace(/^«|»$/g,"");const sec=Math.max(2,Math.round(txt.length/14));return `<button type="button" class="vplay" data-act="voice" data-who="${esc(who)}" data-t="${esc(txt)}" aria-label="Ascolta il messaggio vocale">▶</button><span class="wave"></span><span class="dur">0:${String(sec).padStart(2,"0")}</span><details class="tr"><summary>Trascrizione</summary>${esc(txt)}</details>`;}
 function detailView(app){
   const e=E.lists[app].find(x=>x.id===S.sub);
   if(locked(e))return bar(E.names[app],app)+pinPad(e.lock);
-  return bar(E.names[app],app)+`<div class="pad"><div><b>${e.title}</b>${e.meta?`<div class="meta">${e.meta}</div>`:""}</div><p>${esc(e.body)}</p></div>`;
+  const audible=(app==="rec"||app==="seg"||app==="tel"&&/«|segreteria/i.test(e.title+" "+e.body));
+  return bar(E.names[app],app)+`<div class="pad"><div><b>${e.title}</b>${e.meta?`<div class="meta">${e.meta}</div>`:""}</div>${audible?`<button type="button" class="vplay big" data-act="voice" data-who="${esc(e.title)}" data-t="${esc(e.body)}">▶ Ascolta</button>`:""}<p>${esc(e.body)}</p></div>`;
 }
 function render(keepScroll){
   if(!E)return;
@@ -234,7 +237,7 @@ function render(keepScroll){
   }
   else if(S.view==="msg"){
     const c=E.chats.find(x=>x.id===S.sub);
-    if(c.lock&&!S.open[c.lock]){h=bar(c.name,"msg")+pinPad(c.lock);}else h=bar(c.name,"msg")+`<div class="chat">${c.m.filter(m=>!m[3]||S.unl[m[3]]).map(m=>m[1]===2?`<div class="sys">${esc(m[2])}</div>`:`<div class="bub${m[1]?" me":""}${m[3]?" rec":""}">${esc(m[2])}<small>${m[0]}${m[3]?(m[3].slice(0,3)==="ev_"?" · nuovo":" · recuperato"):""}</small></div>`).join("")}</div>`;
+    if(c.lock&&!S.open[c.lock]){h=bar(c.name,"msg")+pinPad(c.lock);}else h=bar(c.name,"msg")+`<div class="chat">${c.m.filter(m=>!m[3]||S.unl[m[3]]).map(m=>m[1]===2?`<div class="sys">${esc(m[2])}</div>`:`<div class="bub${m[1]?" me":""}${m[3]?" rec":""}${/^\(vocale\)/i.test(m[2])?" vn":""}">${/^\(vocale\)/i.test(m[2])?vnote(m[2],m[1]?E.owner:c.name):esc(m[2])}<small>${m[0]}${m[3]?(m[3].slice(0,3)==="ev_"?" · nuovo":" · recuperato"):""}</small></div>`).join("")}</div>`;
   }
   else if(S.view==="gal"&&S.sub==="lock"){
     h=bar("Galleria","gal")+pinPad("album");
@@ -276,12 +279,12 @@ function answer(){
   const n=norm(v);
   const ok=q.o?v===q.a:((q.all&&q.all.every(t=>n.includes(t))&&n.length<=40)||(q.any&&q.any.some(t=>n.includes(t))&&n.length<=30)||(Array.isArray(q.a)&&q.a.some(x=>norm(x)===n)));
   if(ok){
-    S.news=q.news||"";if(q.unlock){S.unl[q.unlock]=true;toast("Nuovo materiale sul telefono.");render(true);}
+    S.news=q.news||"";if(q.unlock){S.unl[q.unlock]=true;toast("Nuovo materiale sul telefono.");buzz(60);render(true);}
     S.qi++;S.tip=false;S.bad=false;
     if(S.qi>=E.qs.length){finish();return;}
     persist();renderSide();setTimeout(fireEvents,2200);
   }else{
-    S.wrong++;S.bad=true;
+    S.wrong++;S.bad=true;buzz([90,60,90]);
     if(E.timer&&S.running){S.left=Math.max(0,S.left-45);renderTimer();if(S.left<=0){timeUp();return;}}
     persist();renderSide();
   }
@@ -352,6 +355,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b||b.disabled)return;const a=b.dataset.act;
   if(a==="play"){$("verdict").classList.remove("on");play(+b.dataset.n);}
   else if(a==="pickup"){ringPick();}
+  else if(a==="voice"){if(typeof VOICE!=="undefined")VOICE.play(b.dataset.t,b.dataset.who,b);}
   else if(a==="decline"){ringEnd(true);}
   else if(a==="hangup"){ringEnd(false);}
   else if(a==="banner"){$("banner").hidden=true;if(bannerEv&&E){setTab("phone");S.view="msg";S.sub=bannerEv.chat||null;S.pin="";render();}}
@@ -373,8 +377,8 @@ document.addEventListener("click",e=>{
     const k=b.dataset.k,w=b.dataset.w;startTimer();
     if(k==="x")S.pin=S.pin.slice(0,-1);else if(S.pin.length<4)S.pin+=k;
     if(S.pin.length===4){
-      if(S.pin===E.pins[w]){S.open[w]=true;toast("Codice corretto.");if(w==="album")S.sub=null;persist();}
-      else toast("Codice sbagliato.");
+      if(S.pin===E.pins[w]){S.open[w]=true;toast("Codice corretto.");buzz([40,60,40]);if(w==="album")S.sub=null;persist();}
+      else{toast("Codice sbagliato.");buzz([120,80,120,80,120]);}
       S.pin="";
     }
     render();

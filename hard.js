@@ -79,7 +79,7 @@ LIB.hard=(n,tier)=>{const e=EPISODES[n];if(!e||e._hard)return;e._hard=tier;
  const used=new Set(Object.values(e.pins||{}).map(String));
  const code=()=>{let c;do{c=String(1000+Math.floor(r()*9000));}while(used.has(c));used.add(c);return c;};
  // chat di contorno, mescolate tra quelle vere
- if(e.chats){const add=shuffle(r,CHATS).slice(0,3+tier*3).map((c,i)=>({id:"x"+i,name:c[0],sub:c[1],m:c[2].slice(0,3+tier+Math.floor(r()*2)).map(x=>[day(r),x[0],x[1]])}));
+ if(e.chats){const add=shuffle(r,CHATS).slice(0,3+tier*3).map((c,i)=>({id:"x"+i,name:c[0],sub:c[1],m:c[2].slice(0,3+tier+Math.floor(r()*2)).map(x=>[day(r),x[0],(x[0]===0&&/^(Mamma|Papà|Zia Pina|Amica|Fratello|Vicina)$/.test(c[0])&&r()<.55?"(vocale) ":"")+x[1]])}));
   const all=e.chats.slice();for(const c of add)all.splice(1+Math.floor(r()*all.length),0,c);e.chats=all;
   // chiacchiere più vecchie in cima alle chat vere: l'indizio non è più il primo messaggio
   const small=[[0,"Ci sei?"],[1,"Sì dimmi"],[0,"Niente, ti chiamo dopo"],[1,"Ok"],[0,"Buongiorno"],[1,"Buongiorno!"],[0,"Hai visto il meteo?"],[1,"Piove tutto il giorno"],[0,"Grazie ancora per ieri"],[1,"Figurati"]];
