@@ -515,7 +515,7 @@ if("serviceWorker" in navigator){
     const show=w=>{const b=document.getElementById("upd");b.style.display="block";b.onclick=()=>w.postMessage("skip");};
     if(reg.waiting&&navigator.serviceWorker.controller)show(reg.waiting);
     reg.addEventListener("updatefound",()=>{const w=reg.installing;w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller)show(w);});});
-    setInterval(()=>reg.update(),30*60*1000);
+    setInterval(()=>reg.update(),30*60*1000);reg.update();document.addEventListener("visibilitychange",()=>{if(!document.hidden)reg.update();});
   });
 }
 </script>
