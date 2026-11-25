@@ -2,6 +2,7 @@
    Le app del caso sono distribuite tra le pagine (alcune in seconda pagina); le app di contorno
    aprono solo un messaggio breve: non contengono indizi. */
 (function(){
+const KEYAPPS=[["contacts","Contatti","👤","#a2a2a7,#6d6d72"],["social","Social","📸","#ff7a59,#c837ab"]];
 const DECOY=[["meteo","Meteo","🌤️","#4fa3ff,#1d6fd6"],["clock","Orologio","⏰","#3a3a3c,#1c1c1e"],["cam","Fotocamera","📷","#8e8e93,#48484a"],["set","Impostazioni","⚙️","#aeaeb2,#636366"],["music","Musica","🎵","#ff6b8b,#ff2d55"],["calc","Calcolatrice","🧮","#ff9f0a,#c76b00"],["health","Salute","❤️","#ffffff,#f2f2f7"],["wallet","Wallet","👛","#2c2c2e,#000000"],["podcast","Podcast","🎙️","#bf5af2,#7d2ae8"],["store","Store","🛍️","#5ac8fa,#0a84ff"],["files","File","🗂️","#64d2ff,#0a84ff"],["tv","TV","📺","#1c1c1e,#3a3a3c"],["books","Libri","📖","#ff9f0a,#ff6b00"],["home","Domotica","🏡","#ffd60a,#ff9f0a"],["fit","Fitness","🏃","#30d158,#0c8f3b"],["trad","Traduttore","🌐","#0a84ff,#003a8c"]];
 const MSG={meteo:c=>`Meteo ${c}: 14°, nuvoloso. Domani pioggia.`,clock:()=>"Sveglie: 6:45, giorni feriali.",cam:()=>"La fotocamera non serve: le foto sono già in Galleria.",set:()=>"Impostazioni: nessuna modifica recente.",music:()=>"Ultimo ascolto: una playlist di canzoni italiane.",calc:()=>"Calcolatrice: ultimo risultato 0.",health:()=>"Passi di oggi: 3.412.",wallet:()=>"Carta di pagamento ••••. Nessuna transazione qui: guarda l'app della banca.",podcast:()=>"Nessun episodio in corso.",store:()=>"Nessun aggiornamento in sospeso.",files:()=>"Cartella vuota.",tv:()=>"Nessuna serie in corso.",books:()=>"Nessun libro aperto.",home:()=>"Nessun dispositivo collegato.",fit:()=>"Anelli di oggi: 40%.",trad:()=>"Nessuna traduzione recente."};
 const hash=s=>{let x=0;for(const c of String(s))x=(x*31+c.charCodeAt(0))|0;return Math.abs(x);};
@@ -14,6 +15,7 @@ function layout(E){
  const rest=apps.filter(a=>!dockIds.includes(a[0]));
  const nDec=E.n>80?4:8+Math.floor(r()*4);
  const dec=DECOY.slice().sort(()=>r()-.5).slice(0,nDec).map(d=>Object.assign([d[0],d[1],d[2],`linear-gradient(160deg,${d[3]})`],{decoy:true}));
+ const keys=KEYAPPS.map(d=>Object.assign([d[0],d[1],d[2],`linear-gradient(160deg,${d[3]})`],{decoy:true}));dec.unshift(...keys);
  // pagina 1: circa due terzi delle app del caso, pagina 2: le altre; le app di contorno riempiono
  const p2n=E.n>80?0:Math.floor(rest.length/3);const order=rest.slice().sort(()=>r()-.5);
  const on2=order.slice(0,p2n),on1=rest.filter(a=>!on2.includes(a));
@@ -21,8 +23,8 @@ function layout(E){
  const p2=on2.concat(dec.slice(p1.length-on1.length)).sort(()=>r()-.5);
  return {dock,pages:[p1,p2].filter(p=>p.length)};
 }
-function tile(a,ic){return a.decoy?`<button type="button" class="app" data-decoy="${a[0]}"><i style="background:${a[3]}"><span class="emo">${a[2]}</span></i>${a[1]}</button>`
- :`<button type="button" class="app" data-act="go" data-v="${a[0]}"><i style="background:${a[3]}">${ic(a[2])}</i>${a[1]}</button>`;}
+function tile(a,ic){const bd=typeof REAL!=="undefined"&&!a.decoy?REAL.badge(a[0]):0;const B=bd?`<b class="badge">${bd}</b>`:"";return a.decoy?`<button type="button" class="app" data-decoy="${a[0]}"><i style="background:${a[3]}"><span class="emo">${a[2]}</span></i>${a[1]}</button>`
+ :`<button type="button" class="app" data-act="go" data-v="${a[0]}"><i style="background:${a[3]}">${ic(a[2])}${B}</i>${a[1]}</button>`;}
 window.HOMEP={
  render(E,ic){if(curEp!==E.n){cur=0;curEp=E.n;}const L=layout(E);if(cur>=L.pages.length)cur=0;
   return `<div class="pages" data-cur="${cur}">${L.pages.map(p=>`<div class="hpage"><div class="apps">${p.map(a=>tile(a,ic)).join("")}</div></div>`).join("")}</div>
@@ -64,7 +66,8 @@ const SC={
  trad(){return `<div class="xs trad"><div class="tr2"><small>Italiano</small><b>Dov'è la stazione?</b></div><div class="tr2"><small>Inglese</small><b>Where is the station?</b></div></div>`;}
 };
 const NAMES=Object.fromEntries(DECOY.map(d=>[d[0],d[1]]));
-window.HOMEP.screen=id=>(typeof bar==="function"?bar(NAMES[id]||"App"):"")+(SC[id]?SC[id]():`<p class="xn">Niente di utile qui.</p>`);
+NAMES.contacts="Contatti";NAMES.social="Social";
+window.HOMEP.screen=id=>id==="contacts"&&typeof REAL!=="undefined"?REAL.contactsScreen():id==="social"&&typeof REAL!=="undefined"?REAL.socialScreen():(typeof bar==="function"?bar(NAMES[id]||"App"):"")+(SC[id]?SC[id]():`<p class="xn">Niente di utile qui.</p>`);
 let cv="0",acc=null,op=null,fresh=true;
 document.addEventListener("click",e=>{const k=e.target.closest&&e.target.closest("[data-ck]");if(!k)return;const d=document.querySelector("[data-calc]");const v=k.dataset.ck;const num=()=>parseFloat(cv.replace(",","."));const f=x=>{const s=String(+x.toFixed(8)).replace(".",",");return s.length>12?(+x).toExponential(4).replace(".",","):s;};
  if(/[0-9]/.test(v)){cv=fresh||cv==="0"?v:cv+v;fresh=false;}else if(v===","){if(!cv.includes(","))cv=(fresh?"0":cv)+",";fresh=false;}else if(v==="C"){cv="0";acc=null;op=null;fresh=true;}else if(v==="±"){cv=f(-num());}else if(v==="%"){cv=f(num()/100);}

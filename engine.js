@@ -60,7 +60,7 @@ async function cloudInit(){
     if(onMenu())renderMenu();
   }catch(e){cloudState="off";if(onMenu())renderMenu();}
 }
-const KEEP=["el","ep","qi","hints","wrong","tip","news","unl","open","left","view","sub","tab","ev"];
+const KEEP=["unlocked","el","ep","qi","hints","wrong","tip","news","unl","open","left","view","sub","tab","ev"];
 function persist(localOnly){
   if(!E||!S.ep||S.done){return;}
   const c={};KEEP.forEach(k=>c[k]=S[k]);c.at=Date.now();SAVE.cur=c;store();
@@ -150,7 +150,7 @@ function loadEpisode(n){
   E=EPISODES[n];injectEvents(n);
   $("stTime").textContent=phoneTime()||E.time;$("stDate").textContent=E.date;
   $("fStamp").textContent=`${catOf(E.n).name} · incarico n. ${nn(E.n)} · ${SEASON[E.n-1][2]} · telefono di ${E.owner.split(" ")[0]}`;
-  $("fTitle").textContent=SEASON[E.n-1][0];$("fBrief").textContent=E.brief;$("fQuote").textContent=E.quote;
+  $("fTitle").textContent=SEASON[E.n-1][0];$("fBrief").textContent=E.brief+(typeof REAL!=="undefined"?" Codice di sblocco del telefono: "+REAL.code()+".":"");$("fQuote").textContent=E.quote;
   $("fTime").textContent=E.timer?`Hai ${Math.round(E.timer/60)} minuti prima di doverlo restituire. Il tempo parte appena tocchi il telefono. Ogni risposta sbagliata toglie 45 secondi, ogni suggerimento un minuto.`:"";
 }
 const bar=(title,back)=>`<div class="bar"><button type="button" class="back" data-act="go" data-v="${back||"home"}">‹ Indietro</button><h2>${title}</h2></div>`;
@@ -230,12 +230,15 @@ function detailView(app){
 function render(keepScroll){
   if(!E)return;
   const v=$("view"),y=v.scrollTop;let h="";
-  if(S.view==="home"){
+  if(S.view==="home"&&!S.unlocked&&typeof REAL!=="undefined"){h=REAL.lock();}
+  else if(S.view==="home"){
     h=`<div class="home"><div><div class="clock">${phoneTime()}</div><div class="date">${E.homeDate}</div></div>
     <div class="owner">Telefono di ${E.owner.split(" ")[0]}</div>
     ${typeof HOMEP!=="undefined"?HOMEP.render(E,icon):`<div class="apps">${E.apps.map(a=>`<button type="button" class="app" data-act="go" data-v="${a[0]}"><i style="background:${a[3]}">${icon(a[2])}</i>${a[1]}</button>`).join("")}</div>`}</div>`;
   }
   else if(String(S.view).slice(0,2)==="x_"&&typeof HOMEP!=="undefined"&&HOMEP.screen){h=HOMEP.screen(S.view.slice(2));}
+  else if(S.view==="msg"&&!S.sub&&typeof REAL!=="undefined"){h=REAL.chatList();}
+  else if(S.view==="msg"&&typeof REAL!=="undefined"){const c=E.chats.find(x=>x.id===S.sub);h=c?REAL.chatView(c):REAL.chatList();}
   else if(S.view==="msg"&&!S.sub){
     h=bar("Messaggi")+`<div class="list">${E.chats.filter(c=>!c.u||S.unl[c.u]).map(c=>{const vis=c.m.filter(m=>!m[3]||S.unl[m[3]]),l=vis[vis.length-1]||c.m[0];return `<button type="button" class="row" data-act="open" data-s="${c.id}"><b>${c.name}</b><span>${c.lock&&!S.open[c.lock]?"Chat protetta da codice":esc(l[2])}</span><small>${l[0]}${c.sub?" · "+c.sub:""}</small></button>`}).join("")}</div>`;
   }
@@ -256,7 +259,7 @@ function render(keepScroll){
     const p=E.photos.find(x=>x.id===S.sub);
     h=bar(p.title,"gal")+`<div class="pad"><div class="shot">${svg(p.sc)}<em>${p.t}</em></div><div class="meta">${p.t}</div></div>`;
   }
-  else if(E.lists[S.view]){const AV=typeof APPV!=="undefined"&&APPV[S.view];h=S.sub?(AV&&AV.detail?AV.detail(S.view):detailView(S.view)):(AV&&AV.list?AV.list(S.view):listView(S.view));}
+  else if(E.lists[S.view]){if(S.view==="tel")S.open.telSeen=true;const AV=typeof APPV!=="undefined"&&APPV[S.view];h=S.sub?(AV&&AV.detail?AV.detail(S.view):detailView(S.view)):(AV&&AV.list?AV.list(S.view):listView(S.view));}
   v.dataset.app=S.view;v.parentNode.dataset.home=S.view==="home"?"1":"0";
   v.innerHTML=h;v.scrollTop=keepScroll?y:0;
 }
@@ -270,7 +273,7 @@ function renderSide(){
   if(q){
     const field=q.o?`<select id="ans" aria-label="La tua risposta"><option value="">Scegli</option>${q.o.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join("")}</select>`
                    :`<input id="ans" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60" placeholder="Scrivi la risposta" aria-label="La tua risposta">`;
-    $("qbox").innerHTML=(S.news?`<div class="news"><b>Scoperta</b>${esc(S.news)}</div>`:"")+`<div class="qn">Domanda ${S.qi+1} di ${tot}</div><p class="qt">${q.q}</p>${field}
+    $("qbox").innerHTML=(typeof REAL!=="undefined"?`<div class="lkcode">📱 Codice del telefono: <b>${REAL.code()}</b></div>`:"")+(S.news?`<div class="news"><b>Scoperta</b>${esc(S.news)}</div>`:"")+`<div class="qn">Domanda ${S.qi+1} di ${tot}</div><p class="qt">${q.q}</p>${field}
       <div class="acts"><button type="button" class="btn red" data-act="answer">Rispondi</button><button type="button" class="btn" data-act="hint" ${S.tip?"disabled":""}>${S.tip?"Suggerimento usato":"Suggerimento"}</button></div>
       <div class="fb${S.bad?" bad":S.tip?" tip":""}" role="status">${S.bad?"Non è la risposta giusta. Hai perso 45 secondi.":S.tip?q.hint:"Un suggerimento costa un minuto. Ogni due, una stella."}</div>`;
   }else $("qbox").innerHTML=`<div class="qn">Indagine chiusa</div><p class="qt">Hai risposto a tutte le domande.</p>`;
@@ -346,6 +349,7 @@ function timeUp(){
 }
 function phoneTime(){if(!E||!E.time)return "";const [h,m]=E.time.split(":").map(Number);const el=E.timer?(E.timer-(S.left||0)):(S.el||0);const t=((h*60+m+Math.floor(Math.max(0,el)/60))%1440+1440)%1440;return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");}
 function tick(){
+  if(typeof REAL!=="undefined")REAL.tick();
   if(E&&S.ep&&!S.done){if(!E.timer)S.el=(S.el||0)+1;const pt=phoneTime();const st=$("stTime");if(st&&st.textContent!==pt){st.textContent=pt;const ck=document.querySelector(".home .clock");if(ck)ck.textContent=pt;}}
   if(!E||!E.timer||!S.running)return;
   if(S.left>0)S.left--;
