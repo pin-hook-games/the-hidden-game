@@ -9,7 +9,7 @@
   for(const sc of Object.keys(e.scenes)){
    const f="thg-"+nn+"-"+sc+".jpg";if(!ok.has(f))continue;
    const orig=e.scenes[sc];let cap="";
-   try{const t=[...String(orig()).matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map(m=>m[1]).filter(Boolean);cap=t[t.length-1]||"";}catch(err){}
+   try{const t=[...String(orig()).matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map(m=>m[1].trim()).filter(Boolean);const custom=!/LIB\.(two|group|obj)\(/.test(String(orig));cap=custom?t.join(" · "):(t[t.length-1]||"");}catch(err){}
    e.scenes[sc]=()=>LIB.photo(f,cap);
   }}
 })();
